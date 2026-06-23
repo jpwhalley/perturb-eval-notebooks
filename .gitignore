@@ -1,0 +1,31 @@
+# Heavy regenerated data — never tracked
+data/
+figs/
+*.h5ad
+*.h5
+*.pkl
+
+# Logs from run_all.sh
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# uv / venv
+.venv/
+uv.lock-*
+
+# OS
+.DS_Store
+
+# Note: precomputed/ is intentionally tracked.
+# Note: src/perturb_eval/ is the package source and is tracked.

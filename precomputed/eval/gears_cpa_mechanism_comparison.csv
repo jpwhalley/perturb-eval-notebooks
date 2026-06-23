@@ -1,0 +1,9 @@
+condition,model,n,LOO_max_median,top_driver_mode,mode_count,n_high_LOO,mode_frac,sign_flips,sign_flip_rate,mechanism_label
+K562 random,CPA,100,0.1633,MED12,23,56,0.411,42,42/100,single-driver
+K562 random,GEARS,7,0.0734,RPSA,1,3,0.333,2,2/7,mixed
+K562 stratified,CPA,100,0.1629,MED17,21,53,0.396,40,40/100,single-driver
+K562 stratified,GEARS,7,0.1288,SMC1A,1,3,0.333,2,2/7,mixed
+RPE1 random,CPA,100,0.0879,SF3B2,8,13,0.615,5,5/100,mixed
+RPE1 random,GEARS,7,0.0917,BET1,1,1,1.0,3,3/7,mixed
+RPE1 stratified,CPA,100,0.0922,SF3B2,8,9,0.889,8,8/100,mixed
+RPE1 stratified,GEARS,7,0.0757,SF3B2,1,1,1.0,2,2/7,mixed

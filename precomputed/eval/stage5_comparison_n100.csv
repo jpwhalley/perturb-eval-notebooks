@@ -1,0 +1,5 @@
+condition,n,median,MAD,IQR,p5_p95_width,sign_flips,LOO_max_median,top1_frac_median,n_LOOmax_gt_0.15,n_high_LOO_seeds,top_driver_mode,top_driver_mode_count_among_high_LOO
+K562 random,100,0.0604,0.1742,0.3358,0.7631,42,0.1633,0.5093,56,56,MED12,23
+K562 stratified,100,0.1006,0.1516,0.3317,0.7688,40,0.1629,0.4899,53,53,MED17,21
+RPE1 random,100,0.2898,0.1001,0.2175,0.4732,5,0.0879,0.4285,13,13,SF3B2,8
+RPE1 stratified,100,0.2629,0.112,0.2218,0.4831,8,0.0922,0.4224,9,9,SF3B2,8

@@ -1,0 +1,4 @@
+Threshold,K562 random,K562 stratified,RPE1 random,RPE1 stratified
+LOO_max > 0.125,69/100,65/100,21/100,20/100
+LOO_max > 0.150,56/100,53/100,13/100,9/100
+LOO_max > 0.175,49/100,44/100,6/100,2/100

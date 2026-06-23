@@ -1,0 +1,5 @@
+Condition,GEARS (n=7),CPA matched (n=7),Verdict,CPA n=100
+K562 random,mixed (RPSA; 0.073),mixed (POLR3A; 0.138),match,single-driver (MED12; 0.163)
+K562 stratified,mixed (SMC1A; 0.129),single-driver (MED17; 0.217),differ,single-driver (MED17; 0.163)
+RPE1 random,mixed (BET1; 0.092),mixed (-; 0.102),match,mixed (SF3B2; 0.088)
+RPE1 stratified,mixed (SF3B2; 0.076),mixed (SF3B2; 0.067),match,mixed (SF3B2; 0.092)
