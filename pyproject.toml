@@ -52,6 +52,13 @@ gears = [
     "cell-gears",
 ]
 
+# Data-acquisition group — only required for D01 (atlas download) and D02
+# (Replogle supplementary Excel read). Figure-only readers do not need this.
+data = [
+    "pertpy",
+    "openpyxl",
+]
+
 # Development tooling
 dev = [
     "ruff",

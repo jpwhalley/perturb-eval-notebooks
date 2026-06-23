@@ -54,7 +54,19 @@ NOTEBOOKS_READY=(
     P03_evaluate_severity
     P04_loo_and_winsorisation
 
-    # D-series and P01/P02 notebooks will be added here as they are implemented.
+    # D-series — data acquisition. Each gracefully falls through with a helpful
+    # message when its prerequisites are absent.
+    D01_replogle_atlases
+    D02_severity_references
+    D03_holdout_specifications
+
+    # Training wrappers — orchestration shells. The substantive training loops
+    # delegate to src/perturb_eval/train_{cpa,gears}.py (currently documented
+    # stubs). Each notebook gracefully exits with a usage message when neither
+    # QUICK_DEMO nor FULL_TRAINING is set, and with a prerequisite-check message
+    # when the D-series outputs are absent.
+    P01_train_cpa
+    P02_train_gears
 )
 
 # ── Parse arguments ─────────────────────────────────────────────────────────
