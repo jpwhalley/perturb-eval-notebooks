@@ -2,15 +2,16 @@
 # run_all.sh — Execute perturbation-evaluation notebooks in dependency order.
 #
 # Usage:
-#   ./run_all.sh                  # print this help (does not start heavy compute)
-#   ./run_all.sh --figures        # figure/table notebooks from precomputed CSVs (~2 min)
-#   ./run_all.sh --demo           # 2-seed pipeline run to verify installation
-#   ./run_all.sh --analysis       # recompute eval CSVs from existing per-seed predictions
-#   ./run_all.sh --train-full     # full n=100 CPA + matched-n GEARS (~13 hours)
+#   ./run_all.sh                  # print this help; does not start any compute
+#   ./run_all.sh --figures        # public default: figures + tables from precomputed CSVs (~2 min)
+#   ./run_all.sh --demo           # training-path smoke test (checks prerequisites; trains only if all present)
+#   ./run_all.sh --analysis       # recompute eval CSVs from existing per-seed predictions in data/predictions/
+#   ./run_all.sh --train-full     # full n=100 CPA + matched-n GEARS (~13 hours; requires extra deps + manual data setup)
 #
-# Notebooks not listed in NOTEBOOKS_READY below are skipped (placeholders).
-# Add a notebook's stem to NOTEBOOKS_READY once it has been implemented and
-# tested.
+# See README.md "Reproducibility levels" for what each mode produces and what it needs.
+#
+# NOTEBOOKS_READY below gates which notebooks actually execute; placeholders
+# (not in the list) are skipped with a "pending" message.
 
 set -euo pipefail
 
@@ -72,7 +73,16 @@ NOTEBOOKS_READY=(
 # ── Parse arguments ─────────────────────────────────────────────────────────
 
 print_help() {
-    sed -n '/^# Usage:/,/^# Notebooks/p' "$0" | sed 's/^# *//' | sed '$d'
+    cat << 'EOF'
+Usage:
+  ./run_all.sh                  # print this help; does not start any compute
+  ./run_all.sh --figures        # public default: figures + tables from precomputed CSVs (~2 min)
+  ./run_all.sh --demo           # training-path smoke test (checks prerequisites; trains only if all present)
+  ./run_all.sh --analysis       # recompute eval CSVs from existing per-seed predictions in data/predictions/
+  ./run_all.sh --train-full     # full n=100 CPA + matched-n GEARS (~13 hours; requires extra deps + manual data setup)
+
+See README.md "Reproducibility levels" for what each mode produces and what it needs.
+EOF
 }
 
 MODE="${1:-help}"

@@ -50,11 +50,11 @@ embedded in the executed notebooks for direct inspection without re-running.
 | K562 random range −0.487 to +0.607 | span 1.094 | 01 | 4 |
 | K562 random median +0.060 | +0.060 | 02 | 4 |
 | K562 random sign flips | 42/100 | 02 | 4 |
-| K562 random bootstrap 95% mean CI | [−0.002, +0.090] | — | not currently in precomputed CSVs; computed in original a_perturb_AI analysis |
+| K562 random bootstrap 95% mean CI | [−0.002, +0.090] | 01 | 10 |
 | RPE1 random range −0.135 to +0.620 | span 0.755 | 01 | 4 |
 | RPE1 random median +0.290 | +0.290 | 02 | 4 |
 | RPE1 random sign flips | 5/100 | 02 | 4 |
-| RPE1 random bootstrap 95% mean CI | [+0.238, +0.301] | — | as above |
+| RPE1 random bootstrap 95% mean CI | [+0.238, +0.301] | 01 | 10 |
 
 ### In-text statistics (Results §3.2)
 
@@ -166,23 +166,26 @@ Appendix A counts are computed in **cell 6** (`04`) and saved to `precomputed/ta
 
 ## Manuscript figure provenance
 
-The manuscript-bundled Figure 1 (`/manuscripts/perturbation_ai/figs/figure1_methodology.{png,pdf}`) is byte-identical to the repository-generated `figs/figure1_methodology.{png,pdf}` (SHA256 `8ff8697775b9f14bcc288edc6fc7c5d3830e81ffde132da6bd2c92988c3614dd` for the PNG). The manuscript figure is updated by copying the repository output after running `./run_all.sh --figures`.
+The manuscript-bundled Figure 1 PNG at `/manuscripts/perturbation_ai/figs/figure1_methodology.png` is byte-identical to the repository-generated `figs/figure1_methodology.png` (SHA256 `8ff8697775b9f14bcc288edc6fc7c5d3830e81ffde132da6bd2c92988c3614dd`). The bundled PDF differs only by Matplotlib's `CreationDate` metadata; the rendered content is identical. The manuscript figure is updated by copying the repository output after running `./run_all.sh --figures`.
 
 ---
 
-## Pending notebook implementations
+## Notebook implementation status
 
-The following notebooks are placeholders pending implementation and are excluded
-from `NOTEBOOKS_READY` in `run_all.sh`:
+All eleven notebooks (D01–D03, P01–P04, 01–04) are implemented and in
+`NOTEBOOKS_READY` in `run_all.sh`. The D-series and training notebooks
+(P01, P02) gracefully exit with prerequisite-check messages when their
+external inputs (atlases, Replogle supplementary Excel, holdout specs,
+predictions) are not present, so partial setups never produce cryptic
+stack traces.
 
-- `D01_replogle_atlases.ipynb` — Download K562 + RPE1 atlases via pertpy.
-- `D02_severity_references.ipynb` — Aggregate Replogle supplementary leverage tables to gene level.
-- `D03_holdout_specifications.ipynb` — Generate the deterministic holdout specifications consumed by P01 and P02.
-- `P01_train_cpa.ipynb` — CPA training wrapper (heavy; ~13 hours full sweep, ~30 min in 2-seed `--demo` mode).
-- `P02_train_gears.ipynb` — GEARS training wrapper (matched-n only; ~2 hours full).
-
-Once implemented, the relevant cell references in this document will be
-extended to cover the per-seed prediction artefacts.
+One substantive gap remains: the CPA and GEARS training loops in
+`src/perturb_eval/train_cpa.py` and `src/perturb_eval/train_gears.py` are
+documented stubs. When P01 and P02 are invoked with all prerequisites
+present, they print their planned per-seed flow rather than performing
+actual training. The mirror from the original `a_perturb_AI` orchestrators
+is queued for a future session and does not affect Levels 1 or 2 of the
+reproducibility hierarchy described in `README.md`.
 
 ---
 
@@ -200,6 +203,7 @@ extended to cover the per-seed prediction artefacts.
 
 All values were verified against the executed notebook outputs and the
 underlying CSVs in `precomputed/eval/`. The bootstrap 95% confidence intervals
-reported in §3.1 are computed in the original `a_perturb_AI` analysis pipeline
-but are not currently propagated to `precomputed/eval/`; they will be added to
-P03 when that notebook's substantive implementation lands.
+reported in §3.1 are reproduced in `01_figure1.ipynb` cell 10 and saved to
+`precomputed/figure_inputs/bootstrap_ci_summary.csv`. The reproduced bounds
+match the manuscript-quoted values to within bootstrap Monte-Carlo precision
+(~0.002 at 10,000 resamples with `seed=0`).
