@@ -50,11 +50,11 @@ embedded in the executed notebooks for direct inspection without re-running.
 | K562 random range −0.487 to +0.607 | span 1.094 | 01 | 4 |
 | K562 random median +0.060 | +0.060 | 02 | 4 |
 | K562 random sign flips | 42/100 | 02 | 4 |
-| K562 random bootstrap 95% mean CI | [−0.002, +0.090] | 01 | 10 |
+| K562 random bootstrap 95% mean CI | [−0.004, +0.089] | 01 | 10 |
 | RPE1 random range −0.135 to +0.620 | span 0.755 | 01 | 4 |
 | RPE1 random median +0.290 | +0.290 | 02 | 4 |
 | RPE1 random sign flips | 5/100 | 02 | 4 |
-| RPE1 random bootstrap 95% mean CI | [+0.238, +0.301] | 01 | 10 |
+| RPE1 random bootstrap 95% mean CI | [+0.238, +0.300] | 01 | 10 |
 
 ### In-text statistics (Results §3.2)
 
