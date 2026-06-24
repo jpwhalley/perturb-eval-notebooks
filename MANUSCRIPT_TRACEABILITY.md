@@ -24,10 +24,54 @@ embedded in the executed notebooks for direct inspection without re-running.
 
 | Notebook | Cells of interest | Produces |
 |---|---|---|
-| `01_figure1` | cell 4 (load), cell 6 (panel renderers), cell 8 (compose + save) | Figure 1 (PNG + PDF); panel summary CSV |
+| `01_figure1` | cell 4 (load), cell 6 (panel renderers), cell 8 (compose + save), cell 10 (bootstrap CIs) | Figure 1 (PNG + PDF); panel summary CSV; bootstrap CI summary |
 | `02_table1_mechanism_summary` | cell 4 (load), cell 6 (build), cell 8 (save + display) | Table 1 CSV |
 | `03_table2_gears_scope` | cell 4 (load), cell 6 (mechanism label fn), cell 8 (build matched-n) | Table 2 CSV |
 | `04_appendix_threshold_sensitivity` | cell 4 (load), cell 6 (compute) | Appendix A CSV |
+
+---
+
+## Script-level provenance
+
+Every manuscript claim has two equally valid provenance paths: the notebook cell tabulated below, and the CLI script that produces the underlying `precomputed/` artefact. The two paths exist in parallel and are validated against one another. A reviewer auditing a specific value can locate it via whichever path matches their workflow.
+
+**Script quick reference.**
+
+| Script | Phase | Inputs | Outputs | Validation |
+|---|---|---|---|---|
+| `scripts/evaluate_severity_panel.py` | 2 | Raw model prediction h5ads in `data/predictions/raw/`; atlases in `data/replogle/`; severity references in `data/severity_refs/` | Per-seed severity-detail h5ads in `data/predictions/severity_details/` (the `.obs`-column contract that Phase 1 consumes) | `--validate-existing` compares freshly-derived detail h5ads against the existing reference set; verified 428 of 428 match within tolerance |
+| `scripts/recompute_diagnostics.py` | 1 | Per-seed severity-detail h5ads + per-cell-type severity references | All 10 manuscript-canonical CSVs in `precomputed/eval/`, `precomputed/tables/`, and `precomputed/figure_inputs/` | `--validate` diffs every output against `precomputed/`; verified exact match (CI summary within Monte Carlo tolerance) |
+
+**Provenance chain for every figure/table/in-text claim:**
+
+```
+raw atlas + holdout spec  →  raw prediction h5ad
+                                    ↓ (Phase 2: scripts/evaluate_severity_panel.py)
+                              severity-detail h5ad (.obs columns: predicted_mean_abs_delta,
+                                                                  leverage_score,
+                                                                  perturbation_target)
+                                    ↓ (Phase 1: scripts/recompute_diagnostics.py)
+                              precomputed/{eval, tables, figure_inputs}/*.csv
+                                    ↓ (notebooks 01–04)
+                              Figure 1, Table 1, Table 2, Appendix A
+```
+
+**Output → producing script:**
+
+| Output file | Produced by | Notebook that consumes it |
+|---|---|---|
+| `precomputed/eval/diag_loo_sensitivity_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 1) | 01 (cell 4), 03 (cell 4), 04 (cell 4) |
+| `precomputed/eval/diag_loo_sensitivity_gears.csv` | `scripts/recompute_diagnostics.py` (Pass 1) | 03 (cell 4) |
+| `precomputed/eval/diag_winsorise_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 2) | — (analysis intermediate) |
+| `precomputed/eval/diag_winsorise_n100_summary.csv` | `scripts/recompute_diagnostics.py` (Pass 2) | 01 (cell 4), 02 (cell 4) |
+| `precomputed/eval/stage5_comparison_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 3) | 02 (cell 4) |
+| `precomputed/tables/table1_mechanism_summary.csv` | `scripts/recompute_diagnostics.py` | 02 (cell 6) |
+| `precomputed/tables/table2_gears_matched_n.csv` | `scripts/recompute_diagnostics.py` | 03 (cell 8) |
+| `precomputed/tables/appendix_a_threshold_sensitivity.csv` | `scripts/recompute_diagnostics.py` | 04 (cell 6) |
+| `precomputed/figure_inputs/bootstrap_ci_summary.csv` | `scripts/recompute_diagnostics.py` | 01 (cell 10) |
+| `precomputed/figure_inputs/figure1_panel_summary.csv` | `scripts/recompute_diagnostics.py` | 01 (cell 8) |
+
+The per-seed severity-detail h5ads that feed `scripts/recompute_diagnostics.py` are produced by `scripts/evaluate_severity_panel.py` from raw CPA and GEARS prediction outputs. Raw predictions in turn are produced by the P01 (CPA) and P02 (GEARS) training notebooks, whose substantive training loops remain documented as the next-engineering-session deliverable.
 
 ---
 
