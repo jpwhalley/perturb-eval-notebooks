@@ -1,7 +1,7 @@
 [project]
 name = "perturb-eval-notebooks"
 version = "0.1.0"
-description = "Reproducibility notebooks for: Single-shot perturbation benchmarks can mislead: diagnostics for split- and metric-driven instability in single-cell model evaluation"
+description = "Reproducibility notebooks for: Diagnosing split sensitivity in severity-correlation evaluation for single-cell perturbation prediction"
 authors = [
     { name = "Justin P. Whalley", email = "justin.whalley@rosalindfranklin.edu" },
 ]

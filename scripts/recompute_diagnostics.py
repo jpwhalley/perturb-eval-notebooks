@@ -5,7 +5,7 @@ from per-seed severity-detail h5ads.
 This is Phase 1 of the training-aware reproducibility pipeline. It takes the
 already-evaluated severity-detail artefacts (produced by Phase 2,
 scripts/evaluate_severity_panel.py) and produces exactly the eval, table, and
-figure-input CSVs that the figure notebooks (01-04) consume.
+figure-input CSVs that the figure notebooks (01-05) consume.
 
 Input contract
 --------------
@@ -27,8 +27,13 @@ winsorisation thresholds:
 Output contract
 ---------------
 data/eval/diag_loo_sensitivity_n100.csv
+data/eval/diag_loo_sensitivity_gears.csv
 data/eval/diag_winsorise_n100.csv
 data/eval/diag_winsorise_n100_summary.csv
+data/eval/diag_spearman_n100.csv             (§3.3 metric robustness)
+data/eval/diag_spearman_n100_summary.csv     (§3.3 metric robustness)
+data/eval/diag_alttargets_n100.csv           (§3.3 + Appendix B target robustness)
+data/eval/diag_alttargets_n100_summary.csv   (§3.3 + Appendix B target robustness)
 data/eval/stage5_comparison_n100.csv
 data/tables/table1_mechanism_summary.csv
 data/tables/table2_gears_matched_n.csv
@@ -64,11 +69,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 
-warnings.filterwarnings("ignore", category=RuntimeWarning)  # pearsonr on constant slices
+warnings.filterwarnings("ignore", category=RuntimeWarning)  # pearsonr/spearmanr on constant slices
 
-# ── Configuration constants (Methods §2.6) ───────────────────────────────────
+# ── Configuration constants (Methods §2.5) ───────────────────────────────────
 DRIVER_THRESH = 0.10            # threshold for driver_count_above_0.10
 LOO_MAX_THRESH = 0.15           # operational single-driver threshold
 LOW_LOO_THRESH = 0.10           # below which "distributed" is considered
@@ -104,7 +109,7 @@ def load_severity_detail(path: Path) -> dict | None:
 
 def loo_scores(mag: np.ndarray, lev: np.ndarray,
                perts: np.ndarray | None) -> dict:
-    """LOO sensitivity scores for one holdout (Methods §2.6)."""
+    """LOO sensitivity scores for one holdout (Methods §2.5)."""
     raw = pearsonr(mag, lev)[0]
     n = len(mag)
     absdelta = np.empty(n)
@@ -289,7 +294,12 @@ def compute_stage5(loo_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_table1(stage5: pd.DataFrame, wins_summary: pd.DataFrame) -> pd.DataFrame:
-    """Table 1: 7-column mechanism summary, formatted for display."""
+    """Table 1: 8-column mechanism summary, formatted for display.
+
+    Columns match the manuscript Table 1 cell-by-cell: Raw median, Sign flips,
+    LOO_max median, tau_1 median, Top driver (recurrence in high-LOO seeds),
+    and winsorisation range percent change.
+    """
     ORDER = [f"{c} {s}" for c, s in CONDITIONS]
     m = stage5.merge(wins_summary[["condition", "range_pct_change"]],
                      on="condition", how="left")
@@ -304,6 +314,7 @@ def build_table1(stage5: pd.DataFrame, wins_summary: pd.DataFrame) -> pd.DataFra
         "Raw median":  [fmt_sign(v) for v in m["median"]],
         "Sign flips":  [f"{int(v)}/100" for v in m["sign_flips"]],
         "LOO_max median": [f"{v:.3f}" for v in m["LOO_max_median"]],
+        "tau_1 median":  [f"{v:.3f}" for v in m["top1_frac_median"]],
         "Top driver in high-LOO seeds": [
             f"{drv} ({int(cnt)}/{int(tot)})"
             for drv, cnt, tot in zip(m["top_driver_mode"],
@@ -375,6 +386,156 @@ def build_bootstrap_ci(loo_df: pd.DataFrame, n_resamples: int, seed: int) -> pd.
             "ci95_high": round(hi, 4),
         })
     return pd.DataFrame(rows)
+
+
+def compute_spearman_panel(predictions_dir: Path
+                           ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Pass 3: per-seed CPA Pearson + Spearman + 4-row aggregate summary.
+
+    Parallel to compute_winsorise_panel: same per-seed shape, same summary
+    metrics, but the contrast is metric choice (Pearson vs rank-based Spearman)
+    rather than target choice (raw vs winsorised leverage). Used to test whether
+    severity-correlation instability is anchored on Pearson's tail sensitivity
+    or persists under rank-based scoring (Manuscript §3.3 metric-robustness
+    paragraph).
+    """
+    rows = []
+    for cell, split in CONDITIONS:
+        for seed in CPA_SEEDS:
+            d = load_severity_detail(severity_h5ad_path(
+                predictions_dir, "CPA", cell, split, seed))
+            if d is None:
+                continue
+            rows.append({
+                "condition": f"{cell} {split}",
+                "cell_type": cell, "split_type": split, "seed": seed,
+                "r_pearson": float(pearsonr(d["mag"], d["lev"])[0]),
+                "r_spearman": float(spearmanr(d["mag"], d["lev"])[0]),
+            })
+    per_seed = pd.DataFrame(rows)
+
+    summ_rows = []
+    for cell, split in CONDITIONS:
+        g = per_seed[(per_seed.cell_type == cell) & (per_seed.split_type == split)]
+        if g.empty:
+            continue
+        pear = g["r_pearson"].to_numpy(float)
+        spea = g["r_spearman"].to_numpy(float)
+        pr, sr = float(pear.max() - pear.min()), float(spea.max() - spea.min())
+        pam, sam = _mad(pear), _mad(spea)
+        pw = float(np.percentile(pear, 95) - np.percentile(pear, 5))
+        sw = float(np.percentile(spea, 95) - np.percentile(spea, 5))
+        summ_rows.append({
+            "condition": f"{cell} {split}",
+            "n_present": int(len(g)),
+            "pearson_median": round(float(np.median(pear)), 4),
+            "spearman_median": round(float(np.median(spea)), 4),
+            "pearson_range": round(pr, 4),
+            "spearman_range": round(sr, 4),
+            "range_pct_change": round(_pct_change(pr, sr), 1),
+            "pearson_MAD": round(pam, 4),
+            "spearman_MAD": round(sam, 4),
+            "MAD_pct_change": round(_pct_change(pam, sam), 1),
+            "pearson_p5_p95_width": round(pw, 4),
+            "spearman_p5_p95_width": round(sw, 4),
+            "p5_p95_pct_change": round(_pct_change(pw, sw), 1),
+            "pearson_sign_flips": int((pear < 0).sum()),
+            "spearman_sign_flips": int((spea < 0).sum()),
+        })
+    return per_seed, pd.DataFrame(summ_rows)
+
+
+def compute_alttarget_panel(predictions_dir: Path, severity_refs_dir: Path
+                            ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Robustness pass (alternative targets): per-seed CPA correlations against
+    deg_count, log1p(deg_count), and |knockdown_pct|, alongside the canonical
+    leverage target.
+
+    Joins each held-out perturbation_target to the cell-type-specific severity
+    reference. Each holdout records the usable-N for each alternative target,
+    plus the count of knockdown_pct = -1.0 sentinel/flag rows in the Replogle
+    reference (interpretation of the -1 value is not relied on here).
+
+    Manuscript-facing: leverage / DEG count / log(1+DEG) columns underpin
+    the §3.3 alt-target paragraph and the Appendix B sign-flip table.
+    Knockdown columns are retained as exploratory output only and are not
+    reported in the manuscript; the Replogle reference contains a large
+    point mass at the -1 sentinel/flag value, which makes |knockdown|
+    correlations hard to interpret without a defensible filtering rule.
+    """
+    refs = {cell: pd.read_csv(severity_refs_dir / f"replogle_{cell}_severity.csv")
+                  .set_index("perturbation_target")
+            for cell in ("K562", "RPE1")}
+    target_names = ["leverage", "deg", "logdeg", "abskd"]
+
+    rows = []
+    for cell, split in CONDITIONS:
+        ref = refs[cell]
+        for seed in CPA_SEEDS:
+            d = load_severity_detail(severity_h5ad_path(
+                predictions_dir, "CPA", cell, split, seed))
+            if d is None or d["perts"] is None:
+                continue
+            mag = np.asarray(d["mag"], float)
+            j = pd.DataFrame({
+                "perturbation_target": d["perts"],
+                "mag": mag,
+                "leverage": d["lev"],
+            }).merge(ref[["deg_count", "knockdown_pct"]],
+                     left_on="perturbation_target", right_index=True, how="left")
+            row = {
+                "condition": f"{cell} {split}",
+                "cell_type": cell, "split_type": split, "seed": seed,
+                "n_perts": int(len(j)),
+                "n_kd_sentinel": int((j["knockdown_pct"] == -1.0).sum()),
+                "n_deg_missing": int(j["deg_count"].isna().sum()),
+                "n_kd_missing": int(j["knockdown_pct"].isna().sum()),
+            }
+            target_vals = {
+                "leverage": j["leverage"].to_numpy(float),
+                "deg": j["deg_count"].to_numpy(float),
+                "logdeg": np.log1p(j["deg_count"].to_numpy(float)),
+                "abskd": j["knockdown_pct"].abs().to_numpy(float),
+            }
+            mag_arr = j["mag"].to_numpy(float)
+            for tname, tv in target_vals.items():
+                ok = np.isfinite(tv) & np.isfinite(mag_arr)
+                n_ok = int(ok.sum())
+                row[f"n_{tname}"] = n_ok
+                if n_ok < 3 or np.std(tv[ok]) == 0 or np.std(mag_arr[ok]) == 0:
+                    row[f"r_pearson_{tname}"] = float("nan")
+                    row[f"r_spearman_{tname}"] = float("nan")
+                else:
+                    row[f"r_pearson_{tname}"] = float(pearsonr(mag_arr[ok], tv[ok])[0])
+                    row[f"r_spearman_{tname}"] = float(spearmanr(mag_arr[ok], tv[ok])[0])
+            rows.append(row)
+    per_seed = pd.DataFrame(rows)
+
+    summ_rows = []
+    for cell, split in CONDITIONS:
+        g = per_seed[(per_seed.cell_type == cell) & (per_seed.split_type == split)]
+        if g.empty:
+            continue
+        row = {
+            "condition": f"{cell} {split}",
+            "n_seeds": int(len(g)),
+            "median_n_perts": float(np.median(g["n_perts"])),
+            "median_n_kd_sentinel": float(np.median(g["n_kd_sentinel"])),
+            "median_n_kd_missing": float(np.median(g["n_kd_missing"])),
+            "median_n_deg_missing": float(np.median(g["n_deg_missing"])),
+        }
+        for t in target_names:
+            for metric in ("pearson", "spearman"):
+                col = f"r_{metric}_{t}"
+                v = g[col].dropna().to_numpy(float)
+                if len(v) == 0:
+                    continue
+                row[f"{metric}_{t}_median"] = round(float(np.median(v)), 4)
+                row[f"{metric}_{t}_MAD"] = round(_mad(v), 4)
+                row[f"{metric}_{t}_sign_flips"] = int((v < 0).sum())
+                row[f"{metric}_{t}_n_seeds_ok"] = int(len(v))
+        summ_rows.append(row)
+    return per_seed, pd.DataFrame(summ_rows)
 
 
 def build_figure1_panel_summary(loo_df: pd.DataFrame,
@@ -511,6 +672,35 @@ def main():
     wins_df, wins_summary = compute_winsorise_panel(args.predictions_dir, refs)
     print(f"  {len(wins_df)} per-seed rows; {len(wins_summary)} summary rows")
 
+    print("\n=== Robustness pass: Pearson vs Spearman (CPA n=100) ===", flush=True)
+    spear_df, spear_summary = compute_spearman_panel(args.predictions_dir)
+    print(f"  {len(spear_df)} per-seed rows; {len(spear_summary)} summary rows")
+    print(spear_summary[["condition", "pearson_median", "spearman_median",
+                          "pearson_sign_flips", "spearman_sign_flips",
+                          "MAD_pct_change", "range_pct_change"]].to_string(index=False))
+
+    print("\n=== Robustness pass: alternative severity targets (CPA n=100) ===", flush=True)
+    alt_df, alt_summary = compute_alttarget_panel(args.predictions_dir,
+                                                  args.severity_refs_dir)
+    print(f"  {len(alt_df)} per-seed rows; {len(alt_summary)} summary rows")
+    cols = ["condition", "median_n_perts", "median_n_kd_sentinel",
+            "pearson_leverage_median", "spearman_leverage_median",
+            "pearson_deg_median",      "spearman_deg_median",
+            "pearson_logdeg_median",   "spearman_logdeg_median",
+            "pearson_abskd_median",    "spearman_abskd_median"]
+    print(alt_summary[cols].to_string(index=False))
+    print("\n  Sign-flip counts per target (Pearson | Spearman):")
+    for _, r in alt_summary.iterrows():
+        print(f"    {r['condition']:18s}  "
+              f"lev: {int(r['pearson_leverage_sign_flips'])}/{int(r['pearson_leverage_n_seeds_ok'])} | "
+              f"{int(r['spearman_leverage_sign_flips'])}/{int(r['spearman_leverage_n_seeds_ok'])}   "
+              f"deg: {int(r['pearson_deg_sign_flips'])}/{int(r['pearson_deg_n_seeds_ok'])} | "
+              f"{int(r['spearman_deg_sign_flips'])}/{int(r['spearman_deg_n_seeds_ok'])}   "
+              f"logdeg: {int(r['pearson_logdeg_sign_flips'])}/{int(r['pearson_logdeg_n_seeds_ok'])} | "
+              f"{int(r['spearman_logdeg_sign_flips'])}/{int(r['spearman_logdeg_n_seeds_ok'])}   "
+              f"abskd: {int(r['pearson_abskd_sign_flips'])}/{int(r['pearson_abskd_n_seeds_ok'])} | "
+              f"{int(r['spearman_abskd_sign_flips'])}/{int(r['spearman_abskd_n_seeds_ok'])}")
+
     print("\n=== Pass 3: stage5 per-condition aggregates ===", flush=True)
     stage5 = compute_stage5(loo_df)
     print(stage5.to_string(index=False))
@@ -551,6 +741,10 @@ def main():
         "diag_loo_sensitivity_gears":    args.out_eval_dir / "diag_loo_sensitivity_gears.csv",
         "diag_winsorise_n100":           args.out_eval_dir / "diag_winsorise_n100.csv",
         "diag_winsorise_n100_summary":   args.out_eval_dir / "diag_winsorise_n100_summary.csv",
+        "diag_spearman_n100":            args.out_eval_dir / "diag_spearman_n100.csv",
+        "diag_spearman_n100_summary":    args.out_eval_dir / "diag_spearman_n100_summary.csv",
+        "diag_alttargets_n100":          args.out_eval_dir / "diag_alttargets_n100.csv",
+        "diag_alttargets_n100_summary":  args.out_eval_dir / "diag_alttargets_n100_summary.csv",
         "stage5_comparison_n100":        args.out_eval_dir / "stage5_comparison_n100.csv",
         "table1_mechanism_summary":      args.out_tables_dir / "table1_mechanism_summary.csv",
         "table2_gears_matched_n":        args.out_tables_dir / "table2_gears_matched_n.csv",
@@ -562,6 +756,10 @@ def main():
     loo_gears.to_csv(out_files["diag_loo_sensitivity_gears"], index=False)
     wins_df.to_csv(out_files["diag_winsorise_n100"], index=False)
     wins_summary.to_csv(out_files["diag_winsorise_n100_summary"], index=False)
+    spear_df.to_csv(out_files["diag_spearman_n100"], index=False)
+    spear_summary.to_csv(out_files["diag_spearman_n100_summary"], index=False)
+    alt_df.to_csv(out_files["diag_alttargets_n100"], index=False)
+    alt_summary.to_csv(out_files["diag_alttargets_n100_summary"], index=False)
     stage5.to_csv(out_files["stage5_comparison_n100"], index=False)
     table1.to_csv(out_files["table1_mechanism_summary"], index=False)
     table2.to_csv(out_files["table2_gears_matched_n"], index=False)

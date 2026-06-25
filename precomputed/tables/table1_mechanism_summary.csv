@@ -1,5 +1,5 @@
-Cell type,Split,Raw median,Sign flips,LOO_max median,Top driver in high-LOO seeds,Wins. range Delta
-K562,random,+0.060,42/100,0.163,MED12 (23/56),-22%
-K562,stratified,+0.101,40/100,0.163,MED17 (21/53),-16%
-RPE1,random,+0.290,5/100,0.088,SF3B2 (8/13),+4%
-RPE1,stratified,+0.263,8/100,0.092,SF3B2 (8/9),+5%
+Cell type,Split,Raw median,Sign flips,LOO_max median,tau_1 median,Top driver in high-LOO seeds,Wins. range Delta
+K562,random,+0.060,42/100,0.163,0.509,MED12 (23/56),-22%
+K562,stratified,+0.101,40/100,0.163,0.490,MED17 (21/53),-16%
+RPE1,random,+0.290,5/100,0.088,0.428,SF3B2 (8/13),+4%
+RPE1,stratified,+0.263,8/100,0.092,0.422,SF3B2 (8/9),+5%

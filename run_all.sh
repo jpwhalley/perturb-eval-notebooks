@@ -38,6 +38,7 @@ FIGURE_NOTEBOOKS=(
     02_table1_mechanism_summary
     03_table2_gears_scope
     04_appendix_threshold_sensitivity
+    05_metric_robustness
 )
 
 # Notebooks that have been implemented and are ready to execute.
@@ -49,6 +50,7 @@ NOTEBOOKS_READY=(
     02_table1_mechanism_summary
     03_table2_gears_scope
     04_appendix_threshold_sensitivity
+    05_metric_robustness
 
     # Analysis notebooks — read per-seed prediction h5ads, produce eval CSVs.
     # Both gracefully fall through with a helpful message when predictions are absent.

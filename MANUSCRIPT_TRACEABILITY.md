@@ -28,6 +28,7 @@ embedded in the executed notebooks for direct inspection without re-running.
 | `02_table1_mechanism_summary` | cell 4 (load), cell 6 (build), cell 8 (save + display) | Table 1 CSV |
 | `03_table2_gears_scope` | cell 4 (load), cell 6 (mechanism label fn), cell 8 (build matched-n) | Table 2 CSV |
 | `04_appendix_threshold_sensitivity` | cell 4 (load), cell 6 (compute) | Appendix A CSV |
+| `05_metric_robustness` | cell 4 (Spearman vs winsorisation side-by-side), cell 6 (Appendix B alt-target table) | In-text §3.3 Spearman numbers; Appendix B sign-flip table |
 
 ---
 
@@ -40,7 +41,7 @@ Every manuscript claim has two equally valid provenance paths: the notebook cell
 | Script | Phase | Inputs | Outputs | Validation |
 |---|---|---|---|---|
 | `scripts/evaluate_severity_panel.py` | 2 | Raw model prediction h5ads in `data/predictions/raw/`; atlases in `data/replogle/`; severity references in `data/severity_refs/` | Per-seed severity-detail h5ads in `data/predictions/severity_details/` (the `.obs`-column contract that Phase 1 consumes) | `--validate-existing` compares freshly-derived detail h5ads against the existing reference set; verified 428 of 428 match within tolerance |
-| `scripts/recompute_diagnostics.py` | 1 | Per-seed severity-detail h5ads + per-cell-type severity references | All 10 manuscript-canonical CSVs in `precomputed/eval/`, `precomputed/tables/`, and `precomputed/figure_inputs/` | `--validate` diffs every output against `precomputed/`; verified exact match (CI summary within Monte Carlo tolerance) |
+| `scripts/recompute_diagnostics.py` | 1 | Per-seed severity-detail h5ads + per-cell-type severity references | All 14 manuscript-canonical CSVs in `precomputed/eval/`, `precomputed/tables/`, and `precomputed/figure_inputs/` (including the Spearman and alternative-target robustness CSVs that back §3.3 and Appendix B) | `--validate` diffs every output against `precomputed/`; verified exact match (CI summary within Monte Carlo tolerance) |
 
 **Provenance chain for every figure/table/in-text claim:**
 
@@ -52,8 +53,9 @@ raw atlas + holdout spec  →  raw prediction h5ad
                                                                   perturbation_target)
                                     ↓ (Phase 1: scripts/recompute_diagnostics.py)
                               precomputed/{eval, tables, figure_inputs}/*.csv
-                                    ↓ (notebooks 01–04)
-                              Figure 1, Table 1, Table 2, Appendix A
+                                    ↓ (notebooks 01–05)
+                              Figure 1, Table 1, Table 2, Appendix A,
+                              §3.3 Spearman numbers, Appendix B
 ```
 
 **Output → producing script:**
@@ -63,7 +65,11 @@ raw atlas + holdout spec  →  raw prediction h5ad
 | `precomputed/eval/diag_loo_sensitivity_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 1) | 01 (cell 4), 03 (cell 4), 04 (cell 4) |
 | `precomputed/eval/diag_loo_sensitivity_gears.csv` | `scripts/recompute_diagnostics.py` (Pass 1) | 03 (cell 4) |
 | `precomputed/eval/diag_winsorise_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 2) | — (analysis intermediate) |
-| `precomputed/eval/diag_winsorise_n100_summary.csv` | `scripts/recompute_diagnostics.py` (Pass 2) | 01 (cell 4), 02 (cell 4) |
+| `precomputed/eval/diag_winsorise_n100_summary.csv` | `scripts/recompute_diagnostics.py` (Pass 2) | 01 (cell 4), 02 (cell 4), 05 (cell 2) |
+| `precomputed/eval/diag_spearman_n100.csv` | `scripts/recompute_diagnostics.py` (Robustness pass) | — (analysis intermediate) |
+| `precomputed/eval/diag_spearman_n100_summary.csv` | `scripts/recompute_diagnostics.py` (Robustness pass) | 05 (cell 2, cell 4) |
+| `precomputed/eval/diag_alttargets_n100.csv` | `scripts/recompute_diagnostics.py` (Alt-target robustness pass) | 05 (cell 6) — leverage / DEG / log-DEG used by Appendix B; knockdown exploratory only |
+| `precomputed/eval/diag_alttargets_n100_summary.csv` | `scripts/recompute_diagnostics.py` (Alt-target robustness pass) | 05 (cell 2, cell 6) |
 | `precomputed/eval/stage5_comparison_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 3) | 02 (cell 4) |
 | `precomputed/tables/table1_mechanism_summary.csv` | `scripts/recompute_diagnostics.py` | 02 (cell 6) |
 | `precomputed/tables/table2_gears_matched_n.csv` | `scripts/recompute_diagnostics.py` | 03 (cell 8) |
@@ -129,6 +135,19 @@ The per-seed severity-detail h5ads that feed `scripts/recompute_diagnostics.py` 
 | RPE1 random range +4%, MAD +10%, width +9% | marginal widening | 02 | 4 |
 | K562 median capped perturbations per holdout | 6 of 30 | 02 | 4 |
 | RPE1 median capped perturbations per holdout | 1 of 30 | 02 | 4 |
+| K562 random sign flips 42 → 23 under Spearman | 23 | 05 | 4 |
+| K562 stratified sign flips 40 → 30 under Spearman | 30 | 05 | 4 |
+| RPE1 random sign flips 5 → 6 under Spearman | 6 | 05 | 4 |
+| RPE1 stratified sign flips 8 → 8 under Spearman | 8 | 05 | 4 |
+| K562 random MAD drops 42% under Spearman (0.174 → 0.101) | −42% | 05 | 4 |
+| K562 stratified MAD drops 32% under Spearman (0.152 → 0.104) | −32% | 05 | 4 |
+| RPE1 random MAD shifts +28% under Spearman (0.100 → 0.128) | +28% | 05 | 4 |
+| RPE1 stratified MAD shifts −16% under Spearman (0.112 → 0.094) | −16% | 05 | 4 |
+| K562 random median +0.060 → +0.090 under Spearman | +0.090 | 05 | 4 |
+| RPE1 medians essentially unchanged under Spearman | within 0.001 | 05 | 4 |
+| RPE1 sign-flips 5-8/100 under leverage to 30-49/100 under DEG/log-DEG | 30-49 | 05 | 6 |
+| K562 sign-flips 23-56/100 across target/metric combinations tested (target-robust instability) | 23-56 | 05 | 6 |
+| Appendix B table (leverage / DEG / log-DEG sign-flips, Pearson / Spearman) | full 4×3 grid | 05 | 6 |
 
 ### In-text statistics (Results §3.4)
 
