@@ -5,6 +5,8 @@ Reproducibility notebooks for:
 > **Diagnosing split sensitivity in severity-correlation evaluation for single-cell perturbation prediction**
 > Whalley, J.P. (2026). Submitted to MLCB 2026.
 
+**Scope.** This public release prioritises exact manuscript reproduction and validated evaluation-layer provenance. Full CPA and GEARS panel retraining is documented in [`TRAINING_PROVENANCE.md`](TRAINING_PROVENANCE.md) but is not the default reproduction path because it requires model-specific dependencies and long-running stochastic training.
+
 ---
 
 ## Default path: reproduce all manuscript figures and tables in two minutes
@@ -107,7 +109,6 @@ repository/
 ├── uv.lock
 ├── README.md
 ├── MANUSCRIPT_TRACEABILITY.md
-├── CITATION.cff
 ├── perturb_style.py
 ├── run_all.sh
 ├── LICENSE
@@ -159,4 +160,4 @@ The substantive gap remaining is the training-script implementation (Phases 3 an
 
 ## License
 
-MIT. See `LICENSE`. If you use this repository, please cite the accompanying manuscript via the GitHub "Cite this repository" button (powered by `CITATION.cff`).
+MIT. See `LICENSE`. A `CITATION.cff` will be added once the accompanying manuscript has a venue or preprint DOI; for now, please cite the manuscript directly.
