@@ -115,7 +115,7 @@ The per-seed severity-detail h5ads that feed `scripts/recompute_diagnostics.py` 
 | K562 random high-LOO_max holdouts | 56/100 | 02 | 4 |
 | K562 random MED12 mode count | 23/56 | 02 | 6 |
 | RPE1 random LOO_max median | 0.088 | 02 | 4 |
-| RPE1 random τ₁ median | 0.429 | 02 | 4 |
+| RPE1 random τ₁ median | 0.428 | 02 | 4 |
 | RPE1 random high-LOO_max holdouts | 13/100 | 02 | 4 |
 | RPE1 random SF3B2 mode count | 8/13 | 02 | 6 |
 | RPE1 stratified SF3B2 mode count | 8/9 | 02 | 6 |
@@ -235,7 +235,7 @@ The manuscript-bundled Figure 1 PNG at `/manuscripts/perturbation_ai/figs/figure
 
 ## Notebook implementation status
 
-All eleven notebooks (D01–D03, P01–P04, 01–04) are implemented and in
+All twelve notebooks (D01–D03, P01–P04, 01–05) are implemented and in
 `NOTEBOOKS_READY` in `run_all.sh`. The D-series and training notebooks
 (P01, P02) gracefully exit with prerequisite-check messages when their
 external inputs (atlases, Replogle supplementary Excel, holdout specs,

@@ -36,7 +36,7 @@ The repository has three layers, each with a defined role. Understanding the sep
 
 ```
 raw atlases  →  raw predictions  →  severity-detail h5ads  →  evaluation CSVs  →  figures + tables
-              (P01, P02 training)   (scripts/evaluate_         (scripts/            (01–04 notebooks
+              (P01, P02 training)   (scripts/evaluate_         (scripts/            (01–05 notebooks
                                       severity_panel.py)        recompute_            consuming
                                                                  diagnostics.py)      precomputed/)
                                                                                        01-05 notebooks
@@ -52,7 +52,7 @@ Four increasingly demanding levels of reproduction:
 
 | Level | Command | Time | Implementation | Inputs you need |
 |---|---|---|---|---|
-| **1** | `./run_all.sh --figures` | ~2 min | Notebooks 01–04 read shipped CSVs | Cloned repo + `uv sync` |
+| **1** | `./run_all.sh --figures` | ~2 min | Notebooks 01–05 read shipped CSVs | Cloned repo + `uv sync` |
 | **2** | `python3 scripts/recompute_diagnostics.py --validate` | ~30 s | Phase 1 CLI (validated against `precomputed/`) | Per-seed severity-detail h5ads in `data/predictions/severity_details/` |
 | **2.5** | `python3 scripts/evaluate_severity_panel.py` | ~minutes | Phase 2 CLI (validated against existing severity details) | Raw prediction h5ads in `data/predictions/raw/` + atlases in `data/replogle/` |
 | **3** | `./run_all.sh --train-full` | ~13 hours | Documented engineering layer; not yet implemented as standalone CLIs | All of the above + CPA and GEARS installed + raw Replogle atlases |

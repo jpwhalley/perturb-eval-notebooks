@@ -248,20 +248,25 @@ def validate_existing(existing_dir: Path, predictions_raw_dir: Path,
                       atlases_dir: Path, severity_refs_dir: Path,
                       tol: float = 1e-4) -> int:
     """Compare each existing severity-detail h5ad against a freshly-derived one.
-    Returns 0 on full match, 2 on any non-tolerated difference."""
+    Returns 0 on full match, 2 on any non-tolerated difference or skipped input."""
     failures = 0
     checked = 0
+    skipped = []
     for existing_path in sorted(existing_dir.glob("*.severity.h5ad")):
         parsed = parse_pred_filename(existing_path.with_name(existing_path.name.replace(".severity.h5ad", ".h5ad")))
         if parsed is None:
+            skipped.append((existing_path.name, "filename does not match public convention"))
             continue
         model, cell, split, seed = parsed
         raw_path = predictions_raw_dir / f"{model}_{cell}_{split}_seed{seed}.h5ad"
         if not raw_path.exists():
+            skipped.append((existing_path.name, f"missing raw prediction {raw_path}"))
             continue
         sev_path = severity_refs_dir / f"replogle_{cell}_severity.csv"
         atlas_path = atlases_dir / f"{cell.lower()}_essential.h5ad"
-        if not (sev_path.exists() and atlas_path.exists()):
+        missing_inputs = [str(p) for p in (sev_path, atlas_path) if not p.exists()]
+        if missing_inputs:
+            skipped.append((existing_path.name, "missing input(s): " + "; ".join(missing_inputs)))
             continue
 
         checked += 1
@@ -284,8 +289,14 @@ def validate_existing(existing_dir: Path, predictions_raw_dir: Path,
         else:
             print(f"[validate-existing] OK   {existing_path.name}: "
                   f"{len(m)} perts match within tol={tol}")
-    print(f"\n=== Checked {checked} files; {failures} failed ===")
-    return 0 if failures == 0 else 2
+    if skipped:
+        print(f"\n=== Skipped {len(skipped)} existing files during validation ===")
+        for name, reason in skipped[:20]:
+            print(f"  SKIP {name}: {reason}")
+        if len(skipped) > 20:
+            print(f"  ... and {len(skipped) - 20} more skipped files")
+    print(f"\n=== Checked {checked} files; {failures} failed; {len(skipped)} skipped ===")
+    return 0 if failures == 0 and checked > 0 and not skipped else 2
 
 
 def main():
@@ -363,12 +374,15 @@ def main():
 
         atlas_path = args.atlases_dir / f"{cell.lower()}_essential.h5ad"
         sev_path = args.severity_refs_dir / f"replogle_{cell}_severity.csv"
+        missing_required = False
         for required, label in [(atlas_path, "atlas"), (sev_path, "severity ref")]:
             if not required.exists():
                 msg = f"  [{i}/{len(targets)}] FAIL {raw_path.name}: missing {label} {required}"
                 print(msg)
                 failures.append({"raw": str(raw_path), "missing": str(required)})
-                continue
+                missing_required = True
+        if missing_required:
+            continue
 
         try:
             detail, summary = compute_severity_detail(raw_path, atlas_path, sev_path)

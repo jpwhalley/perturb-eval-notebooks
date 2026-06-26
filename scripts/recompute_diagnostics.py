@@ -570,9 +570,29 @@ def validate_against(out_files: dict[str, Path], precomputed_dir: Path,
     """Compare each output CSV against precomputed/ and report differences.
     Returns 0 on full match, 2 on any non-tolerated difference."""
     failures = 0
+    eval_outputs = {
+        "diag_loo_sensitivity_n100", "diag_loo_sensitivity_gears",
+        "diag_winsorise_n100", "diag_winsorise_n100_summary",
+        "diag_spearman_n100", "diag_spearman_n100_summary",
+        "diag_alttargets_n100", "diag_alttargets_n100_summary",
+        "stage5_comparison_n100",
+    }
+    table_outputs = {
+        "table1_mechanism_summary", "table2_gears_matched_n",
+        "appendix_a_threshold_sensitivity",
+    }
+    figure_outputs = {"bootstrap_ci_summary", "figure1_panel_summary"}
     for name, out_path in out_files.items():
-        # Map data/ output paths to precomputed/ paths
-        rel = str(out_path).split("data/", 1)[-1]
+        # Map by output role rather than by string-splitting the generated path,
+        # so validation remains meaningful when outputs are redirected outside data/.
+        if name in eval_outputs:
+            rel = Path("eval") / out_path.name
+        elif name in table_outputs:
+            rel = Path("tables") / out_path.name
+        elif name in figure_outputs:
+            rel = Path("figure_inputs") / out_path.name
+        else:
+            raise KeyError(f"No precomputed/ mapping configured for output {name!r}")
         ref_path = precomputed_dir / rel
         print(f"\n[validate] {out_path.name}")
         print(f"  out: {out_path}")

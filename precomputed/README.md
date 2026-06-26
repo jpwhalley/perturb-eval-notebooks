@@ -1,7 +1,7 @@
 # Precomputed Evaluation Tables
 
 These CSVs are **intentionally tracked** in the repository. They are the default
-reproducibility layer for the figure and table notebooks (01–04): a reader can
+reproducibility layer for the figure and table notebooks (01–05): a reader can
 clone the repository, install dependencies, and reproduce every manuscript
 figure and table in a few minutes without running CPA or GEARS training.
 
