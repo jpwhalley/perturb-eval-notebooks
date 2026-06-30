@@ -116,7 +116,8 @@ repository/
 ├── precomputed/              # Canonical manuscript layer (tracked)
 │   ├── eval/                 # Per-seed evaluation tables (the manuscript-canonical artefacts)
 │   ├── tables/               # Table 1, Table 2, Appendix A (Appendix B is reported inline in notebook 05 from precomputed/eval/diag_alttargets_n100_summary.csv)
-│   └── figure_inputs/        # Aggregated inputs for Figure 1 panels
+│   ├── figure_inputs/        # Aggregated inputs for Figure 1 panels
+│   └── holdout_specs/        # Canonical 400 training-time holdout specs (see D03)
 │
 ├── scripts/                  # CLI implementations (validated against precomputed/)
 │   ├── recompute_diagnostics.py     # Phase 1: severity-detail h5ads → eval/tables/figure_inputs

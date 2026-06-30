@@ -62,6 +62,7 @@ raw atlas + holdout spec  →  raw prediction h5ad
 
 | Output file | Produced by | Notebook that consumes it |
 |---|---|---|
+| `precomputed/holdout_specs/holdout_specs.csv` | Canonical training-time holdout specs (400 holdouts: 4 conditions × 100 seeds), shipped from the author's training-pipeline metadata so that the public repo's holdout-spec view matches the `perturbation_target` field in the shipped severity-detail h5ads exactly | D03 (cell 4, cell 6) |
 | `precomputed/eval/diag_loo_sensitivity_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 1) | 01 (cell 4), 03 (cell 4), 04 (cell 4) |
 | `precomputed/eval/diag_loo_sensitivity_gears.csv` | `scripts/recompute_diagnostics.py` (Pass 1) | 03 (cell 4) |
 | `precomputed/eval/diag_winsorise_n100.csv` | `scripts/recompute_diagnostics.py` (Pass 2) | — (analysis intermediate) |
