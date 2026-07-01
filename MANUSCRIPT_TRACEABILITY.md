@@ -91,8 +91,8 @@ The per-seed severity-detail h5ads that feed `scripts/recompute_diagnostics.py` 
 | Panel | Description | Notebook | Cell |
 |-------|-------------|----------|------|
 | 1A | Per-seed severity Pearson across 4 conditions (n=100) | 01 | 8 |
-| 1B | Winsorisation effect (raw vs winsorised range) | 01 | 8 |
-| 1C | LOO mechanism signature (LOO_max vs τ₁) | 01 | 8 |
+| 1B | LOO mechanism signature (LOO_max vs τ₁) | 01 | 8 |
+| 1C | Winsorisation effect (unwinsorised vs winsorised range) | 01 | 8 |
 
 ### In-text statistics (Results §3.1)
 
@@ -183,7 +183,7 @@ Table 1 is built in **cell 6** (`02`) and saved to `precomputed/tables/table1_me
 
 Table 2 is **derived from raw data** by applying the mechanism label rule (cell 6) to the three slices (GEARS n=7, CPA matched n=7, CPA n=100) in cell 8, and saved to `precomputed/tables/table2_gears_matched_n.csv` in cell 10.
 
-| Condition | GEARS (n=7) | CPA matched (n=7) | Verdict | CPA n=100 | Cell |
+| Condition | GEARS (n=7) | CPA matched (n=7) | Label match | CPA n=100 | Cell |
 |-----------|-------------|-------------------|---------|-----------|------|
 | K562 random | mixed (RPSA; 0.073) | mixed (POLR3A; 0.138) | match | single-driver (MED12; 0.163) | 03 | 8 |
 | K562 stratified | mixed (SMC1A; 0.129) | single-driver (MED17; 0.217) | differ | single-driver (MED17; 0.163) | 03 | 8 |
