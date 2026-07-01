@@ -84,10 +84,7 @@ scripts in the author's working repository (not part of this public release):
 
 Hyperparameters (already documented in Methods §2.2 of the manuscript):
 
-- **CPA**: 30 epochs, batch size 128, Adam optimiser using the CPA 0.8.8 TrainingPlan default learning rate ($5 \times 10^{-4}$; the `--lr` CLI flag in `cpa_20_train.py` is recorded in the run manifest but not forwarded to `model.train`, which uses the TrainingPlan default). The `--training-seed` CLI flag (default 1) is applied only to the validation-split RNG inside the training script; the CPA model initialisation itself uses the library default seed. Cell-type-specific:
-  fixed training seed 1, input gene set = top 2,000 highly variable genes plus
-  perturbation target genes. CPU. ≈2 minutes per (cell type, split, seed) on a
-  modern laptop.
+- **CPA**: 30 epochs, batch size 128, Adam optimiser using the CPA 0.8.8 TrainingPlan default learning rate ($5 \times 10^{-4}$; the `--lr` CLI flag in `cpa_20_train.py` is recorded in the run manifest but not forwarded to `model.train`, which uses the TrainingPlan default). The `--training-seed` CLI flag (default 1) is applied only to the validation-split RNG inside the training script; the CPA model initialisation itself uses the library default seed. The input gene set is the top 2,000 highly variable genes plus perturbation target genes. CPU. ≈2 minutes per (cell type, split, seed) on a modern laptop.
 - **GEARS**: 30 epochs, default GEARS hyperparameters, fixed training seed 1,
   same input gene set as CPA. MPS preferred, CPU fallback. ≈5–10 minutes per
   (cell type, split, seed).
