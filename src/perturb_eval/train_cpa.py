@@ -16,7 +16,7 @@ Contract (any future implementation should satisfy):
         deterministic holdout specification from D03. Returns the path to the
         per-seed prediction AnnData. Approximately 2 minutes per call on CPU.
         Hyperparameters (matching the manuscript): 30 epochs, batch_size 128,
-        lr 1e-3, Adam, fixed training seed 1, input gene set = top 2000 HVGs
+        Adam with the CPA TrainingPlan default lr (5e-4), input gene set = top 2000 HVGs
         plus perturbation target genes. CPU device (scvi-tools float64 logging
         is incompatible with MPS).
 
